@@ -1,5 +1,8 @@
 
 using cadastroLogin.Domain.Context;
+using cadastroLogin.Domain.Models;
+using cadastroLogin.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace cadastroLogin
@@ -21,10 +24,19 @@ namespace cadastroLogin
                 options.UseLazyLoadingProxies().UseSqlite(defaultConnectionString);
             }) ;
 
+            builder.Services.AddIdentity<User, IdentityRole>(options =>
+            {
+                options.User.RequireUniqueEmail = true;
+            }).AddEntityFrameworkStores<UserDbContext>().AddDefaultTokenProviders();
+
+            builder.Services.AddScoped<UserService>();
 
             builder.Services.AddEndpointsApiExplorer();
 
+
             builder.Services.AddSwaggerGen();
+
+            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             var app = builder.Build();
 
@@ -37,6 +49,7 @@ namespace cadastroLogin
 
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
 
