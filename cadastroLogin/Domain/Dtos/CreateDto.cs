@@ -4,21 +4,22 @@ namespace cadastroLogin.Domain.Dtos;
 
 public class CreateDto
 {
-    [EmailAddress]
-    [Required(ErrorMessage = "O email é obrigatório.")]
-    
+    [Required(ErrorMessage = "O campo Email é obrigatório.")]
+    [EmailAddress(ErrorMessage = "O campo Email deve conter um endereço de email válido.")]
+
     public string? Email { get; set; }
 
-    [Required(ErrorMessage = "O nome é obrigatório.")]
+  
     [MinLength(3)]
+    [Required(ErrorMessage = "O campo Nome é obrigatório.")]
     public string? UserName { get; set; }
 
-    [Required(ErrorMessage = "A senha é obrigatória.")]
-    [DataType(DataType.Password)]
+    [Required(ErrorMessage = "O campo Senha é obrigatório.")]
+    [MinLength(6, ErrorMessage = "O campo Senha deve ter no mínimo 6 caracteres.")]
     public string? Password { get; set; }
 
-    [Required(ErrorMessage = "Confirme a senha.")]
-    [Compare("Password")]
+    [Required(ErrorMessage = "O campo Confirmação de Senha é obrigatório.")]
+    [Compare("Senha", ErrorMessage = "As senhas não coincidem.")]
     public string? PasswordConfirmation { get; set; }
 
 }
