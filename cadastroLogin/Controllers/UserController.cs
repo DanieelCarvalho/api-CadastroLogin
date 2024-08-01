@@ -41,7 +41,7 @@ public class UserController : ControllerBase
            return Unauthorized(result.Errors);
         }
         
-            return Ok();
+            return Ok(result);
                
     }
 }

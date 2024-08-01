@@ -11,12 +11,14 @@ public class UserService
     private readonly IMapper _mapper;
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
+    private readonly TokenService _tokenService;
 
-    public UserService(IMapper mapper, UserManager<User> userManager, SignInManager<User> signInManager)
+    public UserService(IMapper mapper, UserManager<User> userManager, SignInManager<User> signInManager, TokenService tokenService)
     {
         _mapper = mapper;
         _userManager = userManager;
         _signInManager = signInManager;
+        _tokenService = tokenService;
     }
 
 
@@ -46,28 +48,34 @@ public class UserService
     }
 
 
-    public async Task<ResultDto> Login(LoginDto loginDto) 
+    public async Task<TokenResponseDto> Login(LoginDto loginDto) 
     {
         var user = await _userManager.FindByEmailAsync(loginDto.Email);
 
 
         if (user == null)
         {
-            return new ResultDto { Success = false, Errors = new List<string> { "Email ou senha inválida." } };
+            return new TokenResponseDto { Success = false, Errors = new List<string> { "Email ou senha inválida." } };
         };
 
         var signInResult = await _signInManager.PasswordSignInAsync(user.UserName, loginDto.Password, false, false);
 
         if (!signInResult.Succeeded)
         {
-            return new ResultDto { Success = false, Errors = new List<string> { "Email ou senha inválida." } };
+            return new TokenResponseDto { Success = false, Errors = new List<string> { "Email ou senha inválida." } };
             
         }
 
         user.LastLoggedIn = DateTime.UtcNow;
         await _userManager.UpdateAsync(user);
 
-        return new ResultDto { Success = true, Errors = null };
+        return new TokenResponseDto()
+        {
+            Success = true, 
+            Errors = null ,
+            Token = _tokenService.GenerateToken(user),
+            Username = user.UserName
+        };
     }
 
 
