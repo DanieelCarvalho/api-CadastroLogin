@@ -17,7 +17,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> CreateAccount(UserCreateDto userCreateDto)
+    public async Task<IActionResult> CreateAccount(CreateDto userCreateDto)
     {
         var result = await _userService.CreateAccount(userCreateDto);
 
@@ -25,8 +25,8 @@ public class UserController : ControllerBase
         {
             return BadRequest(result.Errors);
         }
-
-        return Ok();
+     
+        return Ok(result);
     }
 
 
@@ -34,6 +34,14 @@ public class UserController : ControllerBase
 
     public async Task<IActionResult> Login(LoginDto loginDto)
     {
-        return Ok();
+        var result = await _userService.Login(loginDto);
+
+        if (!result.Success)
+        {
+           return Unauthorized(result.Errors);
+        }
+        
+            return Ok();
+               
     }
 }

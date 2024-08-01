@@ -2,7 +2,7 @@
 
 namespace cadastroLogin.Domain.Dtos;
 
-public class UserCreateDto
+public class CreateDto
 {
     [EmailAddress]
     [Required(ErrorMessage = "O email é obrigatório.")]
