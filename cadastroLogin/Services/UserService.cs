@@ -3,6 +3,9 @@ using cadastroLogin.Domain.Dtos;
 using cadastroLogin.Domain.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using System.Net.Mail;
+
 
 namespace cadastroLogin.Services;
 
@@ -12,15 +15,18 @@ public class UserService
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
     private readonly TokenService _tokenService;
+    private readonly IConfiguration _configuration;
+   
 
-    public UserService(IMapper mapper, UserManager<User> userManager, SignInManager<User> signInManager, TokenService tokenService)
+    public UserService(IMapper mapper, UserManager<User> userManager, SignInManager<User> signInManager, TokenService tokenService, IConfiguration configuration)
     {
         _mapper = mapper;
         _userManager = userManager;
         _signInManager = signInManager;
         _tokenService = tokenService;
+        _configuration = configuration;
+        
     }
-
 
     public async Task<ResultDto> CreateAccount(CreateDto userCreateDto)
     {
@@ -48,7 +54,7 @@ public class UserService
     }
 
 
-    public async Task<TokenResponseDto> Login(LoginDto loginDto) 
+    public async Task<TokenResponseDto> Login(LoginDto loginDto)
     {
         var user = await _userManager.FindByEmailAsync(loginDto.Email);
 
@@ -63,7 +69,7 @@ public class UserService
         if (!signInResult.Succeeded)
         {
             return new TokenResponseDto { Success = false, Errors = new List<string> { "Email ou senha inválida." } };
-            
+
         }
 
         user.LastLoggedIn = DateTime.UtcNow;
@@ -71,8 +77,8 @@ public class UserService
 
         return new TokenResponseDto()
         {
-            Success = true, 
-            Errors = null ,
+            Success = true,
+            Errors = null,
             Token = _tokenService.GenerateToken(user),
             Username = user.UserName
         };
@@ -81,6 +87,42 @@ public class UserService
 
 
 
-}
+    public async Task<ResultDto> ResetPasswordAsync(ResetPasswordDto resetPasswordDto)
+    {
+        if (resetPasswordDto.NewPassword != resetPasswordDto.NewPasswordConfirmation)
+        {
+            return new ResultDto
+            {
+                Success = false,
+                Errors = new List<string> { "A senha e a confirmação de senha não correspondem." }
+            };
+        }
 
-   
+        var user = await _userManager.FindByEmailAsync(resetPasswordDto.Email);
+        if (user == null)
+        {
+            return new ResultDto { Success = false, Errors = new List<string> { "Usuário não encontrado." } };
+        }
+
+        // Remover a senha existente, se houver
+        var result = await _userManager.RemovePasswordAsync(user);
+        if (!result.Succeeded)
+        {
+            var errors = string.Join(",", result.Errors.Select(e => e.Description));
+            return new ResultDto { Success = false, Errors = new List<string> { $"Erro ao remover senha antiga: {errors}" } };
+        }
+
+        // Adicionar a nova senha fornecida pelo usuário
+        result = await _userManager.AddPasswordAsync(user, resetPasswordDto.NewPassword);
+        if (!result.Succeeded)
+        {
+            var errors = string.Join(",", result.Errors.Select(e => e.Description));
+            return new ResultDto { Success = false, Errors = new List<string> { $"Erro ao redefinir senha: {errors}" } };
+        }
+
+        return new ResultDto { Success = true };
+    }
+
+
+
+}

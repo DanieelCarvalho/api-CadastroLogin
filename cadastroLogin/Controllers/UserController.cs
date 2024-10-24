@@ -1,5 +1,7 @@
-﻿using cadastroLogin.Domain.Dtos;
+﻿
+using cadastroLogin.Domain.Dtos;
 using cadastroLogin.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace cadastroLogin.Controllers;
@@ -73,4 +75,38 @@ public class UserController : ControllerBase
 
         return StatusCode(StatusCodes.Status200OK, result);
     }
+
+
+
+
+    /// <summary>
+    /// Redefine a senha do usuário.
+    /// </summary>
+    /// <param name="resetPasswordDto">Dados para redefinição de senha.</param>
+    /// <returns>Um objeto <see cref="ResultDto"/> indicando o sucesso ou falha da operação.</returns>
+    /// <response code="200">Senha redefinida com sucesso.</response>
+    /// <response code="400">Erros de validação.</response>
+    /// <response code="500">Erros internos do servidor.</response>
+    [HttpPost("reset-password")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto resetPasswordDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var result = await _userService.ResetPasswordAsync(resetPasswordDto);
+
+        if (!result.Success)
+        {
+            return StatusCode(StatusCodes.Status400BadRequest, result.Errors);
+        }
+
+        return StatusCode(StatusCodes.Status200OK, result);
+    }
+
 }
